@@ -1,0 +1,16 @@
+[Unit]
+Description=Auto shutdown if no one is playing ${game_name}
+After=syslog.target network.target nss-lookup.target network-online.target
+
+[Service]
+Environment="LD_LIBRARY_PATH=./linux64"
+ExecStart=/home/ubuntu/${game_name}/auto-shutdown.sh
+User=ubuntu
+Group=ubuntu
+StandardOutput=journal
+Restart=on-failure
+KillSignal=SIGINT
+WorkingDirectory=/home/ubuntu/${game_name}
+
+[Install]
+WantedBy=multi-user.target

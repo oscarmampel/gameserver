@@ -1,0 +1,1 @@
+echo url="https://www.duckdns.org/update?domains=${duck_dns_domain}&token=${duck_dns_token}&ip=" | curl -k -o /home/ubuntu/${game_name}/duck.log -K -
