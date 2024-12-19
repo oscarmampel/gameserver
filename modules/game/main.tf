@@ -36,6 +36,14 @@ resource "google_compute_instance" "vm_instance" {
     email  = google_service_account.default.email
     scopes = ["storage-rw"]
   }
+
+  depends_on = [
+    google_storage_bucket_object.autoshutdown,
+    google_storage_bucket_object.autoshutdown_service,
+    google_storage_bucket_object.cron,
+    google_storage_bucket_object.duck_sh,
+    google_storage_bucket_object.backups_sh
+  ]
 }
 
 resource "google_service_account" "default" {
