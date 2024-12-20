@@ -33,7 +33,7 @@ resource "google_compute_instance" "vm_instance" {
   }
 
   service_account {
-    email  = google_service_account.default.email
+    email  = google_service_account.instance.email
     scopes = ["storage-rw"]
   }
 
@@ -46,16 +46,16 @@ resource "google_compute_instance" "vm_instance" {
   ]
 }
 
-resource "google_service_account" "default" {
+resource "google_service_account" "instance" {
   account_id   = var.game_name
-  display_name = "Default service account"
+  display_name = "Service account for the game instance"
   create_ignore_already_exists = true
 }
 
 resource "google_storage_bucket_iam_member" "object_admin" {
   bucket = var.bucket_name
   role = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.default.email}"
+  member = "serviceAccount:${google_service_account.instance.email}"
 }
 
 resource "google_compute_firewall" "ssh" {
@@ -87,7 +87,7 @@ resource "google_compute_firewall" "game" {
 }
 
 data "template_file" "startup" {
-  template = file("modules/game/scripts/startup.sh")
+  template = file("${path.module}/scripts/startup.sh")
   vars = {
     game_name      = var.game_name
     bucket_name    = var.bucket_name
@@ -96,7 +96,7 @@ data "template_file" "startup" {
 }
 
 data "template_file" "duck_template" {
-  template = file("modules/game/scripts/duck.sh")
+  template = file("${path.module}/scripts/duck.sh")
   vars = {
     game_name = var.game_name
     duck_dns_domain = var.duck_dns_domain
@@ -105,7 +105,7 @@ data "template_file" "duck_template" {
 }
 
 data "template_file" "backups_template" {
-  template = file("modules/game/scripts/backups.sh")
+  template = file("${path.module}/scripts/backups.sh")
   vars = {
     game_name = var.game_name
     save_files_path = var.save_files_path
@@ -114,14 +114,14 @@ data "template_file" "backups_template" {
 }
 
 data "template_file" "cron_template" {
-  template = file("modules/game/scripts/jobs.cron")
+  template = file("${path.module}/scripts/jobs.cron")
   vars = {
     game_name = var.game_name
   }
 }
 
 data "template_file" "autoshutdown_template" {
-  template = file("modules/game/scripts/auto-shutdown.sh")
+  template = file("${path.module}/scripts/auto-shutdown.sh")
   vars = {
     shutdown_port_on_no_players = var.shutdown_port_on_no_players
     game_name                    = var.game_name
@@ -129,7 +129,7 @@ data "template_file" "autoshutdown_template" {
 }
 
 data "template_file" "autoshutdown_service_template" {
-  template = file("modules/game/scripts/auto-shutdown.service")
+  template = file("${path.module}/scripts/auto-shutdown.service")
   vars = {
     game_name = var.game_name
   }
@@ -168,4 +168,65 @@ resource "google_storage_bucket_object" "autoshutdown" {
  content      = data.template_file.autoshutdown_template.rendered
  content_type = "text/plain"
  bucket       = var.bucket_name
+}
+
+data "archive_file" "code" {
+  type        = "zip"
+  output_path = "/tmp/code.zip"
+  
+  source_dir  = "${path.module}/functions/"
+  excludes = [ "cmd" ]
+}
+
+resource "google_storage_bucket_object" "code" {
+  name   = "functions/code.zip"
+  bucket = var.bucket_name
+  source = data.archive_file.code.output_path
+}
+
+resource "google_service_account" "cloud_function" {
+  account_id   = var.game_name
+  display_name = "Default service account for the cloud function"
+  create_ignore_already_exists = true
+}
+
+resource "google_cloudfunctions2_function" "startup_function" {
+  name        = "satrtup-function"
+  location    = var.region
+
+  build_config {
+    runtime     = "go121"
+    entry_point = "StartInstanceHTTP"
+    source {
+      storage_source {
+        bucket = var.bucket_name
+        object = google_storage_bucket_object.code.name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count = 1
+    available_memory   = "128Mi"
+    timeout_seconds    = 60
+    environment_variables = {
+        INSTANCE_NAME = google_compute_instance.vm_instance.name
+        ZONE         = var.zone
+        PROJECT_ID   = var.project
+    }
+    service_account_email = google_service_account.cloud_function.email
+  }
+}
+
+resource "google_cloud_run_service_iam_member" "member" {
+  service  = google_cloudfunctions2_function.startup_function.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+resource "google_compute_instance_iam_member" "instance_permissions" {
+  instance_name = google_compute_instance.vm_instance.name
+
+  role   = "roles/compute.instanceAdmin.v1"
+  member = "serviceAccount:${google_service_account.cloud_function.email}"
 }

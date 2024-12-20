@@ -19,14 +19,14 @@ module "game" {
 
 resource "google_storage_bucket_object" "docker_compose" {
  name         = "satisfactory/docker-compose.yml"
- content      = file("modules/satisfactory/docker/docker-compose.yml")
+ content      = file("${path.module}/docker/docker-compose.yml")
  content_type = "text/plain"
  bucket       = var.bucket_name
 }
 
 resource "google_storage_bucket_object" "dockerfile" {
  name         = "satisfactory/dockerfile"
- content      = file("modules/satisfactory/docker/dockerfile")
+ content      = file("${path.module}/docker/dockerfile")
  content_type = "text/plain"
  bucket       = var.bucket_name
 }
