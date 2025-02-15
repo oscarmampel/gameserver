@@ -45,3 +45,16 @@ module "foundry" {
   server_password = var.foundry_server_password
   server_name     = var.foundry_server_name
 }
+
+module "vrising" {
+  source          = "./modules/vrising"
+  project         = var.project
+  region          = var.region
+  zone            = var.zone
+  duck_dns_domain = var.vrising_duck_dns_domain
+  duck_dns_token  = var.duck_dns_token
+  bucket_name     = google_storage_bucket.static_files.name
+  enabled         = var.vrising_enabled
+  server_name     = var.vrising_server_name
+}
+
