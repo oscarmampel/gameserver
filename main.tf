@@ -32,3 +32,16 @@ module "satisfactory" {
   bucket_name     = google_storage_bucket.static_files.name
   enabled         = var.satisfactory_enabled
 }
+
+module "foundry" {
+  source          = "./modules/foundry"
+  project         = var.project
+  region          = var.region
+  zone            = var.zone
+  duck_dns_domain = var.foundry_duck_dns_domain
+  duck_dns_token  = var.duck_dns_token
+  bucket_name     = google_storage_bucket.static_files.name
+  enabled         = var.foundry_enabled
+  server_password = var.foundry_server_password
+  server_name     = var.foundry_server_name
+}

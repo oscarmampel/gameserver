@@ -22,3 +22,21 @@ variable "satisfactory_enabled" {
   type    = bool
   default = false
 }
+
+variable "foundry_duck_dns_domain" {
+  type = string
+}
+
+variable "foundry_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "foundry_server_password" {
+  type = string
+}
+
+variable "foundry_server_name" {
+  type = string
+}
+

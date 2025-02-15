@@ -17,8 +17,8 @@ func init() {
 }
 
 func StartInstanceHTTP(w http.ResponseWriter, r *http.Request) {
-	envVar := os.Getenv("INSTANCE_NAME")
-	if envVar == "" {
+	instance_name := os.Getenv("INSTANCE_NAME")
+	if instance_name == "" {
 		fmt.Fprint(w, "INSTANCE_NAME environment variable not set")
 		return
 	}
@@ -32,13 +32,14 @@ func StartInstanceHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "ZONE environment variable not set")
 		return
 	}
-	err := startInstance(w, projectID, zone, envVar)
+	hostname := os.Getenv("DUCK_DNS")
+	err := startInstance(w, projectID, zone, instance_name, hostname)
 	if err != nil {
 		fmt.Fprintf(w, "Error starting instance: %v", err)
 	}
 }
 
-func startInstance(w io.Writer, projectID, zone, instanceName string) error {
+func startInstance(w io.Writer, projectID, zone, instanceName, hostname string) error {
 	ctx := context.Background()
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
@@ -61,7 +62,30 @@ func startInstance(w io.Writer, projectID, zone, instanceName string) error {
 		return fmt.Errorf("unable to wait for the operation: %w", err)
 	}
 
-	fmt.Fprintf(w, "Instance started\n")
+	// Obtener la información de la instancia después de iniciarla
+	instance, err := instancesClient.Get(ctx, &computepb.GetInstanceRequest{
+		Project:  projectID,
+		Zone:     zone,
+		Instance: instanceName,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to get instance: %w", err)
+	}
+
+	// Obtener la IP de la instancia
+	var ip string
+	for _, networkInterface := range instance.NetworkInterfaces {
+		if len(networkInterface.AccessConfigs) > 0 {
+			ip = *networkInterface.AccessConfigs[0].NatIP
+			break
+		}
+	}
+
+	if ip == "" {
+		return fmt.Errorf("no IP address found for instance")
+	}
+
+	fmt.Fprintf(w, "Instance started\nhostname: %s\nIP: %s", hostname, ip)
 
 	return nil
 }

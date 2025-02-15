@@ -36,6 +36,10 @@ variable "shutdown_port_on_no_players" {
   type    = number
 }
 
+variable "shutdown_protocol_on_no_players" {
+  type    = string
+}
+
 variable "duck_dns_domain" {
   type    = string
 }

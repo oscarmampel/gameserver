@@ -1,25 +1,26 @@
-#!/bin/sh
+#!/bin/bash
 
-shutdownIdleMinutes=10
-idleCheckFrequencySeconds=1
+# Configuration
+PORT=${shutdown_port_on_no_players}
+PROTOCOL="${shutdown_protocol_on_no_players}"
+WAIT_TIME=600      # 10 minutes in seconds
+MONITOR_TIME=300   # 5 minutes in seconds
 
-isIdle=0
-while [ $isIdle -le 0 ]; do
-	isIdle=1
-	iterations=$((60 / $idleCheckFrequencySeconds * $shutdownIdleMinutes))
-    while [ $iterations -gt 0 ]; do
-        sleep $idleCheckFrequencySeconds
-        connectionBytes=$(docker compose -f /home/ubuntu/${game_name}/docker-compose.yml exec ${game_name} ss -l | grep ${shutdown_port_on_no_players} | awk -F ' ' '{s+=$3} END {print s}')
-        if [ ! -z $connectionBytes ] && [ $connectionBytes -gt 0 ]; then
-            isIdle=0
-        fi
-        if [ $isIdle -le 0 ] && [ $(($iterations % 21)) -eq 0 ]; then
-           echo "Activity detected, resetting shutdown timer to $shutdownIdleMinutes minutes."
-           break
-        fi
-        iterations=$(($iterations-1))
-    done
+echo "Monitoring incoming traffic on $PROTOCOL/$PORT on all interfaces..."
+
+while true; do
+    # Wait for 10 minutes without checking
+    sleep $WAIT_TIME
+    
+    echo "Checking for incoming traffic on $PROTOCOL/$PORT for up to 5 minutes..."
+    # Use tcpdump to detect incoming traffic on all interfaces for up to 5 minutes
+    PACKET=$(timeout $MONITOR_TIME tcpdump -i any "dst port $PORT and $PROTOCOL" -c 1 -l)
+    
+    if [ $? -eq 124 ]; then  # Exit code 124 means timeout
+        echo "No incoming traffic received on $PROTOCOL/$PORT in the last 15 minutes. Shutting down the system..."
+        sudo shutdown -h now
+    else
+        echo "Packet detected: $(date) - $PACKET"
+    fi
+
 done
-
-echo "No activity detected for $shutdownIdleMinutes minutes, shutting down."
-sudo shutdown -h now

@@ -47,7 +47,7 @@ resource "google_compute_instance" "vm_instance" {
 }
 
 resource "google_service_account" "instance" {
-  account_id   = var.game_name
+  account_id   = "instance${var.game_name}"
   display_name = "Service account for the game instance"
   create_ignore_already_exists = true
 }
@@ -59,7 +59,7 @@ resource "google_storage_bucket_iam_member" "object_admin" {
 }
 
 resource "google_compute_firewall" "ssh" {
-  name = "allow-ssh"
+  name = "${var.game_name}-allow-ssh"
   allow {
     ports    = ["22"]
     protocol = "tcp"
@@ -124,6 +124,7 @@ data "template_file" "autoshutdown_template" {
   template = file("${path.module}/scripts/auto-shutdown.sh")
   vars = {
     shutdown_port_on_no_players = var.shutdown_port_on_no_players
+    shutdown_protocol_on_no_players = var.shutdown_protocol_on_no_players
     game_name                    = var.game_name
   }
 }
@@ -185,13 +186,13 @@ resource "google_storage_bucket_object" "code" {
 }
 
 resource "google_service_account" "cloud_function" {
-  account_id   = var.game_name
+  account_id   = "cloudfunction${var.game_name}"
   display_name = "Default service account for the cloud function"
   create_ignore_already_exists = true
 }
 
 resource "google_cloudfunctions2_function" "startup_function" {
-  name        = "satrtup-function"
+  name        = "satrtup-function${var.game_name}"
   location    = var.region
 
   build_config {
@@ -213,6 +214,7 @@ resource "google_cloudfunctions2_function" "startup_function" {
         INSTANCE_NAME = google_compute_instance.vm_instance.name
         ZONE         = var.zone
         PROJECT_ID   = var.project
+        DUCK_DNS =  "${var.duck_dns_domain}.duckdns.org"
     }
     service_account_email = google_service_account.cloud_function.email
   }

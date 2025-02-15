@@ -23,6 +23,7 @@ tar -xzf "/home/ubuntu/${game_name}/$(basename $BACKUP_GP_PATH)" -C "${save_file
 
 echo "Setting up scripts..."
 chmod 700 /home/ubuntu/${game_name}/backups.sh
+
 chmod 700 /home/ubuntu/${game_name}/duck.sh
 sh /home/ubuntu/${game_name}/duck.sh
 
@@ -32,6 +33,14 @@ docker compose -f /home/ubuntu/${game_name}/docker-compose.yml up -d
 
 chmod +x /home/ubuntu/${game_name}/auto-shutdown.sh
 chown ubuntu:ubuntu /home/ubuntu/${game_name}/auto-shutdown.sh
+
+
+echo "Setting up auto-shutdown service..."
+groupadd pcap
+usermod -aG pcap ubuntu
+chgrp pcap /usr/bin/tcpdump
+chmod 750 /usr/bin/tcpdump
+setcap cap_net_raw,cap_net_admin=eip /usr/bin/tcpdump
 
 mv /home/ubuntu/${game_name}/auto-shutdown.service /etc/systemd/system/auto-shutdown.service
 systemctl enable auto-shutdown

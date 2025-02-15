@@ -1,0 +1,26 @@
+---
+services:
+  foundry:
+    container_name: foundry
+    image: luxusburg/docker-foundry:latest
+    environment:
+      - TZ=Europe/Paris
+      - WORLD_NAME=worldname
+      - SERVER_PWD=${server_password}
+      - PAUSE_SERVER_WHEN_EMPTY=false
+      - AUTOSAVE_INTERVAL=300
+      - SERVER_IS_PUBLIC=${public_server}
+      - SERVER_PORT=3724
+      - SERVER_QUERY_PORT=27015
+      - SERVER_NAME=${server_name}
+      - SERVER_MAX_PLAYERS=10
+      - MAX_TRANSFER_RATE=8192
+      - CUSTOM_CONFIG=false
+      - BACKUPS=false
+    volumes:
+      - ./server/server:/home/foundry/server_files:rw
+      - ./server/data:/home/foundry/persistent_data:rw
+    ports:
+      - 3724:3724/udp
+      - 27015:27015/udp
+    restart: unless-stopped
