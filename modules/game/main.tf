@@ -1,3 +1,4 @@
+# Instance Setup
 resource "google_compute_network" "vpc_network" {
   name = "${var.game_name}-network"
   auto_create_subnetworks = false
@@ -16,7 +17,11 @@ resource "google_compute_instance" "vm_instance" {
   machine_type = var.instance_type
   tags         = ["ssh"]
   
-  metadata_startup_script = data.template_file.startup.rendered
+  metadata_startup_script = templatefile("${path.module}/scripts/startup.sh", {
+    game_name      = var.game_name
+    bucket_name    = var.bucket_name
+    save_files_path = var.save_files_path
+  })
 
   boot_disk {
     initialize_params {
@@ -86,90 +91,73 @@ resource "google_compute_firewall" "game" {
   source_ranges = ["0.0.0.0/0"]
 }
 
-data "template_file" "startup" {
-  template = file("${path.module}/scripts/startup.sh")
-  vars = {
-    game_name      = var.game_name
-    bucket_name    = var.bucket_name
-    save_files_path = var.save_files_path
-  }
-}
-
-data "template_file" "duck_template" {
-  template = file("${path.module}/scripts/duck.sh")
-  vars = {
-    game_name = var.game_name
-    duck_dns_domain = var.duck_dns_domain
-    duck_dns_token  = var.duck_dns_token
-  }
-}
-
-data "template_file" "backups_template" {
-  template = file("${path.module}/scripts/backups.sh")
-  vars = {
-    game_name = var.game_name
-    save_files_path = var.save_files_path
-    bucket_name = var.bucket_name
-  }
-}
-
-data "template_file" "cron_template" {
-  template = file("${path.module}/scripts/jobs.cron")
-  vars = {
-    game_name = var.game_name
-  }
-}
-
-data "template_file" "autoshutdown_template" {
-  template = file("${path.module}/scripts/auto-shutdown.sh")
-  vars = {
-    shutdown_port_on_no_players = var.shutdown_port_on_no_players
-    shutdown_protocol_on_no_players = var.shutdown_protocol_on_no_players
-    game_name                    = var.game_name
-  }
-}
-
-data "template_file" "autoshutdown_service_template" {
-  template = file("${path.module}/scripts/auto-shutdown.service")
-  vars = {
-    game_name = var.game_name
-  }
-}
+# Scripts Setup
 
 resource "google_storage_bucket_object" "duck_sh" {
  name         = "${var.game_name}/duck.sh"
- content      = data.template_file.duck_template.rendered
+ content      = templatefile("${path.module}/scripts/duck.sh", {
+   game_name = var.game_name
+   duck_dns_domain = var.duck_dns_domain
+   duck_dns_token  = var.duck_dns_token
+ })
  content_type = "text/plain"
  bucket       = var.bucket_name
 }
 
 resource "google_storage_bucket_object" "backups_sh" {
  name         = "${var.game_name}/backups.sh"
- content      = data.template_file.backups_template.rendered
+ content      = templatefile("${path.module}/scripts/backups.sh", {
+   game_name = var.game_name
+   save_files_path = var.save_files_path
+   bucket_name = var.bucket_name
+ })
  content_type = "text/plain"
  bucket       = var.bucket_name
 }
 
 resource "google_storage_bucket_object" "cron" {
  name         = "${var.game_name}/jobs.cron"
- content      = data.template_file.cron_template.rendered
+ content      = templatefile("${path.module}/scripts/jobs.cron", {
+   game_name = var.game_name
+ })
  content_type = "text/plain"
  bucket       = var.bucket_name
 }
 
 resource "google_storage_bucket_object" "autoshutdown_service" {
  name         = "${var.game_name}/auto-shutdown.service"
- content      = data.template_file.autoshutdown_service_template.rendered
+ content      = templatefile("${path.module}/scripts/auto-shutdown.service", {
+   game_name = var.game_name
+ })
  content_type = "text/plain"
  bucket       = var.bucket_name
 }
 
 resource "google_storage_bucket_object" "autoshutdown" {
  name         = "${var.game_name}/auto-shutdown.sh"
- content      = data.template_file.autoshutdown_template.rendered
+ content      = templatefile("${path.module}/scripts/auto-shutdown.sh", {
+   shutdown_port_on_no_players = var.shutdown_port_on_no_players
+   shutdown_protocol_on_no_players = var.shutdown_protocol_on_no_players
+   game_name = var.game_name
+ })
  content_type = "text/plain"
  bucket       = var.bucket_name
 }
+
+data "archive_file" "server_settings_tar" {
+  type        = "tar.gz"
+  output_path = "/tmp/${var.game_name}/server_settings.tar.gz"
+  
+  source_dir  = var.settings_path
+}
+
+resource "google_storage_bucket_object" "server_settings" {
+ name         = "${var.game_name}/server_settings.tar.gz"
+ source      = data.archive_file.server_settings_tar.output_path
+ bucket       = var.bucket_name
+}
+
+# Startup Function Setup
 
 data "archive_file" "code" {
   type        = "zip"
@@ -192,7 +180,7 @@ resource "google_service_account" "cloud_function" {
 }
 
 resource "google_cloudfunctions2_function" "startup_function" {
-  name        = "satrtup-function${var.game_name}"
+  name        = "satrtup-function-${var.game_name}"
   location    = var.region
 
   build_config {
@@ -214,7 +202,7 @@ resource "google_cloudfunctions2_function" "startup_function" {
         INSTANCE_NAME = google_compute_instance.vm_instance.name
         ZONE         = var.zone
         PROJECT_ID   = var.project
-        DUCK_DNS =  "${var.duck_dns_domain}.duckdns.org"
+        STATIC_INFO =  var.startup_url_extra_info
     }
     service_account_email = google_service_account.cloud_function.email
   }

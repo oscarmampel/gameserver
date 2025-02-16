@@ -11,7 +11,7 @@ output "satisfactory_startup_url" {
 
 output "satisfactory_url" {
   description = "The URL to access the satisfactory game server"
-  value       = "${var.satisfactory_duck_dns_domain}.duckdns.org"
+  value       = module.satisfactory.game_url
 }
 
 
@@ -25,11 +25,6 @@ output "foundry_startup_url" {
   value       = module.foundry.startup_url
 }
 
-output "foundry_url" {
-  description = "The URL to access the foundry game server"
-  value       = "${var.foundry_duck_dns_domain}.duckdns.org"
-}
-
 output "vrising_ip" {
   description = "Ip of the vrising game server"
   value       = module.vrising.game_ip
@@ -40,7 +35,17 @@ output "vrising_startup_url" {
   value       = module.vrising.startup_url
 }
 
-output "vrising_url" {
-  description = "The URL to access the vrising game server"
-  value       = "${var.vrising_duck_dns_domain}.duckdns.org"
+output "spaceengineers_ip" {
+  description = "Ip of the spaceengineers game server"
+  value       = module.spaceengineers.game_ip
+}
+
+output "spaceengineers_startup_url" {
+  description = "The URL to start the instance of spaceengineers if is not running"
+  value       = module.spaceengineers.startup_url
+}
+
+output "spaceengineers_url" {
+  description = "The URL to access the spaceengineers game server"
+  value       = module.spaceengineers.game_url
 }

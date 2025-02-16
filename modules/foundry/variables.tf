@@ -39,3 +39,7 @@ variable "public_server" {
   type    = bool
   default = true
 }
+
+variable "settings_path" {
+  type = string
+}

@@ -8,3 +8,8 @@ output "startup_url" {
  description = "The URL to start the instance if is not running"
  value = google_cloudfunctions2_function.startup_function.service_config[0].uri
 }
+
+output "game_url" {
+ description = "The URL to access the game server"
+ value = var.duck_dns_domain != "" ? "${var.duck_dns_domain}.duckdns.org" : ""
+}

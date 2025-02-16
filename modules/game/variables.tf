@@ -42,10 +42,12 @@ variable "shutdown_protocol_on_no_players" {
 
 variable "duck_dns_domain" {
   type    = string
+  default = ""
 }
 
 variable "duck_dns_token" {
   type    = string
+  default = ""
 }
 
 variable "bucket_name" {
@@ -53,5 +55,14 @@ variable "bucket_name" {
 }
 
 variable "save_files_path" {
+  type    = string
+}
+
+variable "startup_url_extra_info" {
+  type    = string
+  default = ""
+}
+
+variable "settings_path" {
   type    = string
 }

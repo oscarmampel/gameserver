@@ -32,14 +32,14 @@ func StartInstanceHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "ZONE environment variable not set")
 		return
 	}
-	hostname := os.Getenv("DUCK_DNS")
-	err := startInstance(w, projectID, zone, instance_name, hostname)
+	staticInfo := os.Getenv("STATIC_INFO")
+	err := startInstance(w, projectID, zone, instance_name, staticInfo)
 	if err != nil {
 		fmt.Fprintf(w, "Error starting instance: %v", err)
 	}
 }
 
-func startInstance(w io.Writer, projectID, zone, instanceName, hostname string) error {
+func startInstance(w io.Writer, projectID, zone, instanceName, staticInfo string) error {
 	ctx := context.Background()
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
@@ -85,7 +85,7 @@ func startInstance(w io.Writer, projectID, zone, instanceName, hostname string) 
 		return fmt.Errorf("no IP address found for instance")
 	}
 
-	fmt.Fprintf(w, "Instance started\nhostname: %s\nIP: %s", hostname, ip)
+	fmt.Fprintf(w, "Instance started\nIP: %s\n%s", ip, staticInfo)
 
 	return nil
 }

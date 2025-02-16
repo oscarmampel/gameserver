@@ -26,3 +26,7 @@ variable "enabled" {
   type    = bool
   default = true
 }
+
+variable "settings_path" {
+  type = string
+}

@@ -15,6 +15,9 @@ mkdir -p ${save_files_path}
 echo "Downloading scripts..."
 gsutil cp -r gs://${bucket_name}/${game_name} /home/ubuntu/
 
+echo "Restoring Server Settings..."
+tar -xzf "/home/ubuntu/${game_name}/server_settings.tar.gz" -C "/home/ubuntu/${game_name}"
+
 echo "Restoring backup..."
 BACKUP_GP_PATH=$(gsutil ls -l gs://${bucket_name}/save_files/${game_name}/* | head -n -1 | sort -k 2 | tail -n 1 | awk '{print $3}')
 gsutil cp -r $BACKUP_GP_PATH /home/ubuntu/${game_name}

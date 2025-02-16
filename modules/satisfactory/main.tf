@@ -14,6 +14,8 @@ module "game" {
   duck_dns_token  = var.duck_dns_token
   bucket_name = var.bucket_name
   save_files_path = "/home/ubuntu/satisfactory/satisfactory-server/saved"
+  settings_path = var.settings_path
+  startup_url_extra_info = "Server Url: ${var.duck_dns_domain}.duckdns.org\n"
 
   depends_on = [google_storage_bucket_object.docker_compose]
 }

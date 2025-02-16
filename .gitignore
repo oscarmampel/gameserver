@@ -36,3 +36,8 @@ override.tf.json
 .terraformrc
 terraform.rc
 .env
+
+# Ignore server Setting files
+settings/**
+!settings/**/
+!**/.gitkeep

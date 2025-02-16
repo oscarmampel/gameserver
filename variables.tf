@@ -40,10 +40,6 @@ variable "foundry_server_name" {
   type = string
 }
 
-variable "vrising_duck_dns_domain" {
-  type = string
-}
-
 variable "vrising_enabled" {
   type    = bool
   default = false
@@ -53,4 +49,15 @@ variable "vrising_server_name" {
   type = string
 }
 
+variable "spaceengineers_duck_dns_domain" {
+  type = string
+}
 
+variable "spaceengineers_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "spaceengineers_server_name" {
+  type = string
+}
