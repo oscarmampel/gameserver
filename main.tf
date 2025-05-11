@@ -31,7 +31,19 @@ module "satisfactory" {
   duck_dns_token  = var.duck_dns_token
   bucket_name     = google_storage_bucket.static_files.name
   enabled         = var.satisfactory_enabled
-  settings_path = "${path.module}/settings/satisfactory/"
+  settings_path   = "${path.module}/settings/satisfactory/"
+}
+
+module "moria" {
+  source          = "./modules/moria"
+  project         = var.project
+  region          = var.region
+  zone            = var.zone
+  duck_dns_domain = var.moria_duck_dns_domain
+  duck_dns_token  = var.duck_dns_token
+  bucket_name     = google_storage_bucket.static_files.name
+  enabled         = var.moria_enabled
+  settings_path   = "${path.module}/settings/moria/"
 }
 
 module "foundry" {
@@ -45,17 +57,17 @@ module "foundry" {
   enabled         = var.foundry_enabled
   server_password = var.foundry_server_password
   server_name     = var.foundry_server_name
-  settings_path = "${path.module}/settings/foundry/"
+  settings_path   = "${path.module}/settings/moria/"
 }
 
 module "vrising" {
-  source          = "./modules/vrising"
-  project         = var.project
-  region          = var.region
-  zone            = var.zone
-  bucket_name     = google_storage_bucket.static_files.name
-  enabled         = var.vrising_enabled
-  server_name     = var.vrising_server_name
+  source        = "./modules/vrising"
+  project       = var.project
+  region        = var.region
+  zone          = var.zone
+  bucket_name   = google_storage_bucket.static_files.name
+  enabled       = var.vrising_enabled
+  server_name   = var.vrising_server_name
   settings_path = "${path.module}/settings/vrising/"
 }
 
@@ -69,6 +81,6 @@ module "spaceengineers" {
   bucket_name     = google_storage_bucket.static_files.name
   enabled         = var.spaceengineers_enabled
   server_name     = var.spaceengineers_server_name
-  settings_path = "${path.module}/settings/spaceengineers/"
+  settings_path   = "${path.module}/settings/spaceengineers/"
 }
 

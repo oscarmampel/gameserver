@@ -34,10 +34,12 @@ variable "zone" {
 
 variable "shutdown_port_on_no_players" {
   type    = number
+  default = 0
 }
 
 variable "shutdown_protocol_on_no_players" {
   type    = string
+  default = "tcp"
 }
 
 variable "duck_dns_domain" {
@@ -65,4 +67,18 @@ variable "startup_url_extra_info" {
 
 variable "settings_path" {
   type    = string
+}
+
+variable "shutdown_script" {
+  type    = string
+  default = ""
+}
+
+locals {
+  default_shutdown_script = templatefile("${path.module}/scripts/auto-shutdown.sh", {
+   shutdown_port_on_no_players = var.shutdown_port_on_no_players
+   shutdown_protocol_on_no_players = var.shutdown_protocol_on_no_players
+   game_name = var.game_name
+ })
+ shutdown_script = var.shutdown_script != "" ? var.shutdown_script : local.default_shutdown_script
 }

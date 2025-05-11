@@ -1,3 +1,5 @@
+#!/bin/bash
+
 DOMAIN="${duck_dns_domain}"
 TOKEN="${duck_dns_token}"
 

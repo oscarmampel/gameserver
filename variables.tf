@@ -61,3 +61,12 @@ variable "spaceengineers_enabled" {
 variable "spaceengineers_server_name" {
   type = string
 }
+
+variable "moria_duck_dns_domain" {
+  type = string
+}
+
+variable "moria_enabled" {
+  type    = bool
+  default = false
+}

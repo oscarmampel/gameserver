@@ -135,11 +135,7 @@ resource "google_storage_bucket_object" "autoshutdown_service" {
 
 resource "google_storage_bucket_object" "autoshutdown" {
  name         = "${var.game_name}/auto-shutdown.sh"
- content      = templatefile("${path.module}/scripts/auto-shutdown.sh", {
-   shutdown_port_on_no_players = var.shutdown_port_on_no_players
-   shutdown_protocol_on_no_players = var.shutdown_protocol_on_no_players
-   game_name = var.game_name
- })
+ content      = local.shutdown_script
  content_type = "text/plain"
  bucket       = var.bucket_name
 }

@@ -49,3 +49,19 @@ output "spaceengineers_url" {
   description = "The URL to access the spaceengineers game server"
   value       = module.spaceengineers.game_url
 }
+
+
+output "moria_ip" {
+  description = "Ip of the moria game server"
+  value       = module.moria.game_ip
+}
+
+output "moria_startup_url" {
+  description = "The URL to start the instance of moria if is not running"
+  value       = module.moria.startup_url
+}
+
+output "moria_url" {
+  description = "The URL to access the moria game server"
+  value       = module.moria.game_url
+}
